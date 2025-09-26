@@ -6,6 +6,7 @@ class CrewAIApp {
         this.resultsContainer = document.getElementById('resultsContainer');
         this.loadingOverlay = document.getElementById('loadingOverlay');
         this.weatherAgent = document.getElementById('weatherAgent');
+        this.apiAgent = document.getElementById('apiAgent');
         this.mathAgent = document.getElementById('mathAgent');
         
         this.init();
@@ -118,11 +119,14 @@ class CrewAIApp {
     highlightActiveAgent(agentUsed) {
         // Clear previous active states
         this.weatherAgent.classList.remove('active');
+        this.apiAgent.classList.remove('active');
         this.mathAgent.classList.remove('active');
 
         // Highlight the active agent
         if (agentUsed.includes('Weather')) {
             this.weatherAgent.classList.add('active');
+        } else if (agentUsed.includes('API')) {
+            this.apiAgent.classList.add('active');
         } else if (agentUsed.includes('Math')) {
             this.mathAgent.classList.add('active');
         }
@@ -130,12 +134,14 @@ class CrewAIApp {
         // Remove active state after 3 seconds
         setTimeout(() => {
             this.weatherAgent.classList.remove('active');
+            this.apiAgent.classList.remove('active');
             this.mathAgent.classList.remove('active');
         }, 3000);
     }
 
     clearAgentStatus() {
         this.weatherAgent.classList.remove('active');
+        this.apiAgent.classList.remove('active');
         this.mathAgent.classList.remove('active');
     }
 

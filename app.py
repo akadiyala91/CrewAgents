@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import os
 import sys
-from crew_weather_api import simple_query_router, get_weather, do_math_calculation
+from crew_weather_api import simple_query_router, get_weather, do_math_calculation, get_api_data
 from config import Config
 
 app = Flask(__name__)
@@ -39,6 +39,9 @@ def handle_query():
             
             agent_used = "Weather Agent"
             response = get_weather(location)
+        elif query_type == "api":
+            agent_used = "API Agent"
+            response = get_api_data(query)
         else:
             agent_used = "Math Agent"
             response = do_math_calculation(query)
@@ -84,6 +87,21 @@ def get_math_api():
     except Exception as e:
         return jsonify({
             'error': f'Math calculation error: {str(e)}',
+            'success': False
+        }), 500
+
+@app.route('/api/sample')
+def get_sample_api():
+    """Direct sample API endpoint"""
+    try:
+        response = get_api_data("random fact")
+        return jsonify({
+            'response': response,
+            'success': True
+        })
+    except Exception as e:
+        return jsonify({
+            'error': f'API fetch error: {str(e)}',
             'success': False
         }), 500
 

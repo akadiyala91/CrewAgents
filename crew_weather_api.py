@@ -12,12 +12,20 @@ OPENWEATHER_API_KEY = Config.OPENWEATHER_API_KEY
 def simple_query_router(query):
     """Simple keyword-based routing without AI"""
     weather_keywords = ["weather", "temperature", "forecast", "climate", "rain", "snow", "sunny", "cloudy", "wind"]
+    api_keywords = ["quote", "joke", "fact", "advice", "cat", "dog", "user", "api", "data", "fetch"]
     query_lower = query.lower()
     
+    # Check for weather-related queries
     for keyword in weather_keywords:
         if keyword in query_lower:
             return "weather"
     
+    # Check for other API-related queries
+    for keyword in api_keywords:
+        if keyword in query_lower:
+            return "api"
+    
+    # Default to math for everything else
     return "math"
 
 # Function for the weather agent to call the OpenWeather API
@@ -34,6 +42,78 @@ def get_weather(location: str) -> str:
         return f"Weather in {location}: {desc}, temperature {temp}°C."
     except Exception as e:
         return f"Error fetching weather: {e}"
+
+# Function for API agent to call various free APIs
+def get_api_data(query: str) -> str:
+    """Fetch data from various free APIs based on query"""
+    import json
+    
+    query_lower = query.lower()
+    
+    try:
+        # Random quote API
+        if any(word in query_lower for word in ["quote", "inspiration", "motivate"]):
+            response = requests.get("https://api.quotable.io/random", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                return f"💡 Quote: \"{data['content']}\" - {data['author']}"
+        
+        # Dad joke API
+        elif any(word in query_lower for word in ["joke", "funny", "laugh"]):
+            response = requests.get("https://icanhazdadjoke.com/", 
+                                  headers={"Accept": "application/json"}, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                return f"😄 Here's a joke: {data['joke']}"
+        
+        # Cat fact API
+        elif any(word in query_lower for word in ["cat", "feline"]):
+            response = requests.get("https://catfact.ninja/fact", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                return f"🐱 Cat Fact: {data['fact']}"
+        
+        # Dog fact API
+        elif any(word in query_lower for word in ["dog", "puppy"]):
+            response = requests.get("https://dogapi.dog/api/v2/facts", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('data') and len(data['data']) > 0:
+                    return f"🐶 Dog Fact: {data['data'][0]['attributes']['body']}"
+        
+        # Random user API (JSONPlaceholder)
+        elif any(word in query_lower for word in ["user", "person", "profile"]):
+            import random
+            user_id = random.randint(1, 10)
+            response = requests.get(f"https://jsonplaceholder.typicode.com/users/{user_id}", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                return f"👤 Random User: {data['name']} ({data['email']}) from {data['address']['city']}"
+        
+        # Advice API
+        elif any(word in query_lower for word in ["advice", "tip", "suggest"]):
+            response = requests.get("https://api.adviceslip.com/advice", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                return f"💭 Advice: {data['slip']['advice']}"
+        
+        # Random fact API
+        elif any(word in query_lower for word in ["fact", "trivia", "knowledge"]):
+            response = requests.get("https://uselessfacts.jsph.pl/random.json?language=en", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                return f"🤓 Random Fact: {data['text']}"
+        
+        # Default API response
+        else:
+            return "🔌 I can fetch data from various APIs! Try asking for: quotes, jokes, cat facts, dog facts, user data, advice, or random facts."
+    
+    except requests.exceptions.Timeout:
+        return "⏰ API request timed out. Please try again."
+    except requests.exceptions.RequestException as e:
+        return f"🚫 API Error: Unable to fetch data. ({str(e)})"
+    except Exception as e:
+        return f"❌ Unexpected error: {str(e)}"
 
 # Function for the math agent to perform various calculations
 def do_math_calculation(query: str = None) -> str:
