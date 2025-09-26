@@ -2,80 +2,23 @@
 
 import random
 import requests
-from crewai import Agent, Crew, Task, Process
-from crewai.project import CrewBase, agent, crew, task
 
-# Replace with your actual OpenWeatherMap API key
-OPENWEATHER_API_KEY = "YOUR_API_KEY_HERE"
+from config import Config
 
-@CrewBase
-class WeatherMathCrew:
-    """Crew with a Root agent and two specialist agents (Weather and Math)."""
+# Get API key from configuration
+OPENWEATHER_API_KEY = Config.OPENWEATHER_API_KEY
 
-    @agent
-    def root(self) -> Agent:
-        return Agent(
-            role="Root Router",
-            goal="Receive a user query and route it to the appropriate agent (weather or math).",
-            backstory="I route queries about weather to the Weather Agent and all other queries to the Math Agent.",
-            allow_delegation=False,
-            verbose=True  # Log detailed steps
-        )
-
-    @agent
-    def weather_agent(self) -> Agent:
-        return Agent(
-            role="Weather Data Fetcher",
-            goal="Fetch current weather information from OpenWeatherMap API.",
-            backstory="I retrieve weather data when given a location query.",
-            allow_code_execution=True,
-            verbose=True
-        )
-
-    @agent
-    def math_agent(self) -> Agent:
-        return Agent(
-            role="Random Math Operator",
-            goal="Perform a random mathematical operation and return the result.",
-            backstory="I generate random numbers, apply a random operation, and give the result.",
-            allow_code_execution=True,
-            verbose=True
-        )
-
-    @task
-    def root_task(self) -> Task:
-        return Task(
-            description="Determine if query is about weather or math",
-            expected_output="Which agent should handle the query (weather or math)",
-            agent=self.root
-        )
-
-    @task
-    def weather_task(self) -> Task:
-        return Task(
-            description="Fetch weather data for the specified location",
-            expected_output="Current weather information in a human-readable format",
-            agent=self.weather_agent
-        )
-
-    @task
-    def math_task(self) -> Task:
-        return Task(
-            description="Compute a random math operation",
-            expected_output="Result of the random math operation",
-            agent=self.math_agent
-        )
-
-    @crew
-    def crew(self) -> Crew:
-        # Create crew with all agents and tasks, enabling memory and verbose logging
-        return Crew(
-            agents=[self.root, self.weather_agent, self.math_agent],
-            tasks=[self.root_task, self.weather_task, self.math_task],
-            process=Process.sequential,
-            memory=True,
-            verbose=True
-        )
+# Simple routing without AI - we'll handle this in the Flask app
+def simple_query_router(query):
+    """Simple keyword-based routing without AI"""
+    weather_keywords = ["weather", "temperature", "forecast", "climate", "rain", "snow", "sunny", "cloudy", "wind"]
+    query_lower = query.lower()
+    
+    for keyword in weather_keywords:
+        if keyword in query_lower:
+            return "weather"
+    
+    return "math"
 
 # Function for the weather agent to call the OpenWeather API
 def get_weather(location: str) -> str:
@@ -92,40 +35,142 @@ def get_weather(location: str) -> str:
     except Exception as e:
         return f"Error fetching weather: {e}"
 
-# Function for the math agent to perform a random calculation
-def do_random_math() -> str:
-    # Choose two random integers and an operation
-    a = random.randint(1, 10)
-    b = random.randint(1, 10)
-    op = random.choice(['+', '-', '*', '**'])
-    result = eval(f"{a} {op} {b}")
-    return f"{a} {op} {b} = {result}"
+# Function for the math agent to perform various calculations
+def do_math_calculation(query: str = None) -> str:
+    """Perform math calculations based on query or generate random ones"""
+    
+    # If query contains mathematical expressions, try to evaluate them
+    if query:
+        import re
+        
+        # Look for mathematical expressions in the query
+        # Simple patterns: "5 + 3", "10 * 7", "15 / 3", etc.
+        math_pattern = r'(\d+(?:\.\d+)?)\s*([+\-*/])\s*(\d+(?:\.\d+)?)'
+        matches = re.findall(math_pattern, query)
+        
+        if matches:
+            results = []
+            for match in matches:
+                num1, operator, num2 = match
+                num1, num2 = float(num1), float(num2)
+                
+                try:
+                    if operator == '+':
+                        result = num1 + num2
+                    elif operator == '-':
+                        result = num1 - num2
+                    elif operator == '*':
+                        result = num1 * num2
+                    elif operator == '/':
+                        if num2 != 0:
+                            result = num1 / num2
+                        else:
+                            return "Error: Division by zero!"
+                    
+                    # Format result nicely
+                    if result == int(result):
+                        result = int(result)
+                    
+                    results.append(f"{num1} {operator} {num2} = {result}")
+                except Exception as e:
+                    results.append(f"Error calculating {num1} {operator} {num2}: {str(e)}")
+            
+            return "; ".join(results)
+    
+    # Generate random math problems if no specific calculation found
+    operation_type = random.choice(['basic', 'advanced', 'word_problem'])
+    
+    if operation_type == 'basic':
+        a = random.randint(1, 50)
+        b = random.randint(1, 50)
+        op = random.choice(['+', '-', '*'])
+        
+        if op == '+':
+            result = a + b
+        elif op == '-':
+            result = a - b
+        elif op == '*':
+            result = a * b
+            
+        return f"{a} {op} {b} = {result}"
+    
+    elif operation_type == 'advanced':
+        operations = [
+            ('square', lambda x: x**2, 'squared'),
+            ('cube', lambda x: x**3, 'cubed'),
+            ('factorial', lambda x: 1 if x <= 1 else x * factorial(x-1) if x <= 10 else 'too large', 'factorial')
+        ]
+        
+        op_name, op_func, op_desc = random.choice(operations)
+        num = random.randint(2, 10)
+        
+        try:
+            result = op_func(num)
+            if op_name == 'factorial':
+                return f"{num}! = {result}"
+            else:
+                return f"{num} {op_desc} = {result}"
+        except:
+            return f"Cannot compute {num} {op_desc}"
+    
+    else:  # word_problem
+        scenarios = [
+            ("apples", "basket"),
+            ("books", "shelf"),
+            ("cars", "parking lot"),
+            ("students", "classroom")
+        ]
+        
+        item, container = random.choice(scenarios)
+        initial = random.randint(5, 20)
+        change = random.randint(1, 10)
+        
+        if random.choice([True, False]):  # addition
+            result = initial + change
+            return f"There were {initial} {item} in the {container}. {change} more were added. Total: {result} {item}"
+        else:  # subtraction
+            change = min(change, initial)  # don't go negative
+            result = initial - change
+            return f"There were {initial} {item} in the {container}. {change} were removed. Remaining: {result} {item}"
 
-# Override agent behavior by hooking into Crew callbacks
-# Here, we manually route the tasks based on the root agent's decision.
+def factorial(n):
+    """Helper function for factorial calculation"""
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+# Simple standalone functions for weather and math - no CrewAI dependency needed
 def main():
-    crew_obj = WeatherMathCrew().crew()
-
-    # Sample queries to demonstrate routing
+    """Simple test function"""
     queries = [
         "What's the weather in London?",
-        "Calculate something random for me.",
-        "Temperature and forecast, please.",
-        "Give me a random math result.",
+        "Calculate 15 + 25",
+        "Temperature in Paris",
+        "What is 5 * 8?",
+        "Give me a random math problem",
     ]
+    
     for query in queries:
-        print(f"\nUser query: \"{query}\"")
-
-        # Determine routing (simple keyword check)
-        if any(k in query.lower() for k in ["weather", "temperature", "forecast"]):
-            agent_used = "Weather Agent"
-            response = get_weather(query.split()[-1].strip("?.!"))
+        print(f"\nQuery: \"{query}\"")
+        query_type = simple_query_router(query)
+        
+        if query_type == "weather":
+            # Extract location
+            words = query.split()
+            location = "London"
+            for i, word in enumerate(words):
+                if word.lower() in ["in", "at", "for"] and i + 1 < len(words):
+                    location = words[i + 1].strip("?.!")
+                    break
+                elif word.lower() in ["weather", "temperature", "forecast"] and i + 1 < len(words):
+                    location = words[i + 1].strip("?.!")
+                    break
+            
+            print(f"Routed to: Weather Agent")
+            print(f"Response: {get_weather(location)}")
         else:
-            agent_used = "Math Agent"
-            response = do_random_math()
-
-        print(f"Routed to: {agent_used}")
-        print(f"Response: {response}")
+            print(f"Routed to: Math Agent")
+            print(f"Response: {do_math_calculation(query)}")
 
 if __name__ == "__main__":
     main()

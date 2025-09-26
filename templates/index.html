@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrewAI Weather & Math Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <h1>CrewAI Assistant</h1>
+                </div>
+                <p class="subtitle">Intelligent Weather & Math Operations</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Query Input Section -->
+            <section class="query-section">
+                <div class="query-container">
+                    <h2>Ask me anything!</h2>
+                    <p class="query-description">
+                        I can help you with weather information or perform random math calculations. 
+                        Just ask naturally!
+                    </p>
+                    
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="queryInput" 
+                                placeholder="e.g., What's the weather in Paris? or Calculate something random"
+                                autocomplete="off"
+                            >
+                            <button id="sendBtn" class="send-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Action Buttons -->
+                    <div class="quick-actions">
+                        <button class="quick-btn" data-query="What's the weather in London?">
+                            <i class="fas fa-cloud-sun"></i>
+                            Weather in London
+                        </button>
+                        <button class="quick-btn" data-query="What's the weather in New York?">
+                            <i class="fas fa-cloud-sun"></i>
+                            Weather in NYC
+                        </button>
+                        <button class="quick-btn" data-query="Calculate something random">
+                            <i class="fas fa-calculator"></i>
+                            Random Math
+                        </button>
+                        <button class="quick-btn" data-query="Give me a math problem">
+                            <i class="fas fa-plus"></i>
+                            Math Problem
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section">
+                <div class="results-container">
+                    <h3>Results</h3>
+                    <div id="resultsContainer" class="results-list">
+                        <div class="welcome-message">
+                            <i class="fas fa-lightbulb"></i>
+                            <p>Try asking me about weather or math! Use the examples above or type your own question.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Agent Status Section -->
+            <section class="agent-status">
+                <div class="status-container">
+                    <h3>Available Agents</h3>
+                    <div class="agents-grid">
+                        <div class="agent-card" id="weatherAgent">
+                            <div class="agent-icon">
+                                <i class="fas fa-cloud-sun"></i>
+                            </div>
+                            <div class="agent-info">
+                                <h4>Weather Agent</h4>
+                                <p>Fetches current weather information from OpenWeatherMap API</p>
+                                <span class="agent-status-badge">Ready</span>
+                            </div>
+                        </div>
+                        <div class="agent-card" id="mathAgent">
+                            <div class="agent-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="agent-info">
+                                <h4>Math Agent</h4>
+                                <p>Performs random mathematical operations and calculations</p>
+                                <span class="agent-status-badge">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 CrewAI Assistant. Powered by CrewAI Framework.</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-cog fa-spin"></i>
+            <p>Processing your request...</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
